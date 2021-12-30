@@ -75,9 +75,27 @@ class Grid {
     if (c == undefined) return this.chunkSize.height;
     for (let i = 0; i < this.chunkSize.height; i++) {
       if (c[i][j] == 0) continue;
+      if (c[i][j].id == BLOCK_GRASS1.id || c[i][j].id == BLOCK_GRASS2.id) continue;
       return i;
     }
     return this.chunkSize.height;
+  }
+
+  generateTree(x, y) {
+    const leafGenPattern = [
+    [-1,-3],[0,-3],[1,-3],
+    [-1,-2],[0,-2],[1,-2],
+    [-2,-1],[-1,-1],[0,-1],[1,-1],[2,-1],
+    [-2,0],[-1,0],[0,0],[1,0],[2,0]];
+    const treeHeight = Math.round(random(1, 10));
+
+    //grid.setBlock(x, y, BLOCK_WOOD.copy());
+    for (let i = 0; i < treeHeight; i++) {
+      grid.setBlock(x, y - i, BLOCK_WOOD.copy());
+    }
+    for (const leaf of leafGenPattern) {
+      grid.setBlock(x + leaf[0], y - treeHeight + leaf[1], BLOCK_LEAVES.copy());
+    }
   }
   
   generateGrass(chunk, i, j, y, y1) {
@@ -109,13 +127,27 @@ class Grid {
           // Generating grass and rock decoration
           this.generateGrass(chunk, i, j, y, y1);
           rand = Math.floor(random(0, 50));
-          if (rand <= 0 || rand >= 3) continue;
-          chunk[i - 1][j] = BLOCK_ROCK4.copy();
+          if (rand > 0 && rand < 3) chunk[i - 1][j] = BLOCK_ROCK4.copy();
           continue
         }
         chunk[i][j] = 0;
       }
     }
     this.chunks[spot] = chunk;
+    let xt;
+    let yt;
+    let checkBlock;
+    for (let i = 3; i < this.chunkSize.width - 3; i++) {
+      rand = Math.round(random(0, 25));
+      if (rand >= 3) continue;
+      xt = this.getChunkIndex(x) * this.chunkSize.width + i;
+      yt = this.getHeight(xt);
+      checkBlock = grid.getBlock(xt, yt);
+      if (checkBlock.id == BLOCK_ROCK4.id) continue;
+      else if (checkBlock.id == BLOCK_GRASS1.id) continue;
+      else if (checkBlock.id == BLOCK_GRASS2.id) continue;
+      else if (checkBlock.id == BLOCK_LEAVES.id) continue;
+      this.generateTree(xt, yt - 1);
+    }
   }
 }

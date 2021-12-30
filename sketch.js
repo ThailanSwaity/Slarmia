@@ -67,6 +67,8 @@ function preload() {
   blockList[12] = loadImage("textures/Grass_02.png");
 
   blockList[15] = loadImage("textures/Rock_04.png");
+  blockList[16] = loadImage("textures/trees/Copa de arbol.jpg");
+  blockList[17] = loadImage("textures/trees/bark-1024-colcor.png");
 
   backgroundImage = loadImage("textures/Background_01.png");
   

@@ -20,6 +20,9 @@ class Inventory {
     this.inventory[13] = BLOCK_SIGN;
     this.inventory[0] = BLOCK_CHAIR;
     this.inventory[1] = BLOCK_ROCK4;
+    this.inventory[2] = BLOCK_WOOD.copy();
+    this.inventory[2].collidable = true;
+    this.inventory[3] = BLOCK_LEAVES;
     
     this.selected = 0;
   }

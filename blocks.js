@@ -78,3 +78,6 @@ BLOCK_ROCK4.init = function() {
   this.textureXoffset = random(-0.5, 0.5);
 }
 BLOCK_ROCK4.collidable = false;
+const BLOCK_WOOD = new Block(17);
+BLOCK_WOOD.collidable = false;
+const BLOCK_LEAVES = new Block(16);
