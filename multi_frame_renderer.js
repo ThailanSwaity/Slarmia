@@ -16,6 +16,12 @@ class MultiFrameRenderer {
 		this._activeRender = false;
 	}
 
+	/*
+	Triggers a render to the inactive context. If actively rendering, the function will make another call to this._renderWorld() continuing
+	the rendering process.
+	Upon completion of the render, the contexts will be swiched and the newly rendered context becomes the active context.
+	and the newly inactive context will be reused as the graphics buffer for later.
+	*/
 	renderWorld(x, y) {
 		if (this._activeRender) {
 			this._activeRender = !this._renderWorld().next().done;
@@ -29,14 +35,15 @@ class MultiFrameRenderer {
 		let position = this._getInactiveContextPosition();
 		position.x = x;
 		position.y = y;
-
-		// Sudo code
-		// this._renderWorld();
 		this._activeRender = true;
 		this._clearInactiveContext();
 		this.renderWorld(x, y);
 	}
 
+	/*
+	Uses Javascripts' generator methods to render the world the inactive context over multiple frames.
+	Renders this.blocks_per_frame per iteration. Returns an object { done: true } when rendering is complete.
+	*/
 	*_renderWorld() {
 		const position = this._getInactiveContextPosition();
 		const context = this._getInactiveContext();
@@ -118,6 +125,9 @@ class MultiFrameRenderer {
 		return this._activeRender;
 	}
 
+	/*
+	Removes the block at (x,y) from both active and inactive contexts.
+	*/
 	removeBlock(x, y, block) {
 		this._removeBlock(x, y, block, this._contextA, this._CAPosition);
 		this._removeBlock(x, y, block, this._contextB, this._CBPosition);
@@ -137,6 +147,9 @@ class MultiFrameRenderer {
   		context.pop();
 	}
 
+	/*
+	Draws a block onto both active and inactive contexts.
+	*/
 	placeBlock(x, y, block) {
 		this._placeBlock(x, y, block, this._contextA, this._CAPosition);
 		this._placeBlock(x, y, block, this._contextB, this._CBPosition);

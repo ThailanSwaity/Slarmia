@@ -3,7 +3,6 @@ let grid = new Grid(0.02, 45, { width: 16, height: 128 }, 15);
 let g = 0.01;
 let border;
 
-let chunkRadius = 16;
 let player = new Player(0.1, 0);
 let cursor = new Cursor(0);
 
@@ -11,16 +10,6 @@ let worldRenderer;
 
 let milliCounter = 0;
 let debugBuffer;
-
-let worldGraphicsBuffer;
-let lastRedrawLocation = {};
-let usingBufferA = true;
-
-// Multiframe rendering variables
-const BLOCKS_PER_FRAME = 5000;
-let block_count = 0;
-let renderActive = false;
-let multiRenderBuffer;
 
 let parallax = 0.2;
 
@@ -45,8 +34,6 @@ let invY;
 
 // Blocks
 let blockList = [];
-
-let rock4_decoration;
 
 // Backgrounds
 let backgroundImage;
@@ -180,22 +167,11 @@ function setup() {
   debugBuffer.strokeWeight(5);
   debugBuffer.text('test', 0, debugBuffer.height * 0.5);
   
-  worldGraphicsBuffer = createGraphics(2 * width, 2 * height, WEBGL);
-  worldGraphicsBuffer.ortho();
-  worldGraphicsBuffer.noStroke();
-
-  multiRenderBuffer = createGraphics(2 * width, 2 * height, WEBGL);
-  multiRenderBuffer.ortho();
-  multiRenderBuffer.noStroke();
-  
   hotbarX = -width / 2;
   invY = -height / 2 + slotSize * 1.5;
-  
-  setWorldGraphicsBuffer();
 }
 
 function draw() {
-  // Handling key pressed
   background(80);
   
   handleKeyPress();
@@ -206,8 +182,6 @@ function draw() {
   }
   
   player.update();
-  //console.log(player.x);
-  
   checkCollisions();
   
   //
@@ -222,17 +196,6 @@ function draw() {
   // ----------------------------------------------------------------------------------
   
   renderBackground();
-  
-  // if (needsRedraw() || renderActive) {
-  //   let s = renderWorld().next();
-  //   if (!renderActive) lastRedrawLocation = { x: player.x, y: player.y };
-  //   //console.log(s);
-  //   if (s.done) renderActive = false;
-  //   else {
-  //     renderActive = true;
-  //   }
-  //   //setWorldGraphicsBuffer();
-  // }
 
   if (needsRedraw() || worldRenderer.isActive()) {
     worldRenderer.renderWorld(player.x, player.y);
@@ -308,16 +271,6 @@ function renderInventory() {
   }
 }
 
-function getActiveRenderContext() {
-  if (usingBufferA) return worldGraphicsBuffer;
-  return multiRenderBuffer;
-}
-
-function getInactiveRenderContext() {
-  if (!usingBufferA) return worldGraphicsBuffer;
-  return multiRenderBuffer;
-}
-
 function renderBackground() {
   push();
   noStroke();
@@ -358,100 +311,12 @@ function addBlock(x, y, block) {
   worldRenderer.placeBlock(x, y, block);
 }
 
-function* renderWorld() {
-  console.log('Render begin called');
-  let xRad = Math.ceil(width / grid.gridSize);
-  let yRad = Math.ceil(height / grid.gridSize);
-  let blockY;
-  let blockX;
-  let block;
-
-  let context = getActiveRenderContext();
-  //console.log('World tiles drawn to buffer!');
-  
-  context.push();
-  context.clear();
-  context.translate(-grid.scale(lastRedrawLocation.x), -grid.scale(lastRedrawLocation.y));
-  for (let y = -yRad; y < yRad + 1; y++) {
-    blockY = player.y + y;
-    if (blockY < 1 || blockY > grid.chunkSize.height - 1) continue;
-    for (let x = -xRad; x < xRad + 1; x++) {
-      blockX = player.x + x;
-      if (!grid.isChunk(blockX)) continue;
-      block = grid.getBlock(blockX, blockY);
-      if (block == 0) continue;
-      context.texture(getTextureForItem(block.id));
-      context.rect(
-        grid.scale(Math.floor(blockX) + block.textureXoffset),
-        grid.scale(Math.floor(blockY) - (block.textureHeight - 1) + block.textureYoffset),
-        grid.scale(block.textureWidth),
-        grid.scale(block.textureHeight)
-      );
-      block_count++;
-      //console.log(block_count);
-      if (block_count > BLOCKS_PER_FRAME) {
-        block_count = 0;
-        context.pop();
-        yield;
-      }
-    }
-  }
-  context.pop();
-  console.log('render ended.');
-  usingBufferA = !usingBufferA;
-}
-
-function setWorldGraphicsBuffer() {
-  let startTime = millis();
-  
-  let xRad = Math.ceil(width / grid.gridSize);
-  let yRad = Math.ceil(height / grid.gridSize);
-  
-  let blockY;
-  let blockX;
-  let block;
-  
-  //console.log('World tiles drawn to buffer!');
-  
-  worldGraphicsBuffer.push();
-  worldGraphicsBuffer.clear();
-  worldGraphicsBuffer.translate(-grid.scale(player.x), -grid.scale(player.y));
-  for (let y = -yRad; y < yRad + 1; y++) {
-    blockY = player.y + y;
-    if (blockY < 1 || blockY > grid.chunkSize.height - 1) continue;
-    for (let x = -xRad; x < xRad + 1; x++) {
-      blockX = player.x + x;
-      if (!grid.isChunk(blockX)) continue;
-      block = grid.getBlock(blockX, blockY);
-      if (block == 0) continue;
-      worldGraphicsBuffer.texture(getTextureForItem(block.id));
-      worldGraphicsBuffer.rect(
-        grid.scale(Math.floor(blockX) + block.textureXoffset),
-        grid.scale(
-          Math.floor(blockY) -
-            (block.textureHeight - 1) +
-            block.textureYoffset
-        ),
-        grid.scale(block.textureWidth),
-        grid.scale(block.textureHeight)
-      );
-    }
-  }
-  worldGraphicsBuffer.pop();
-  lastRedrawLocation = {
-    x: player.x,
-    y: player.y
-  };
-  
-  //console.log('It took ' + Math.round(millis() - startTime) + 'ms to render the world');
-}
-
 function needsRedraw() {
-  let lastRedrawLocation = worldRenderer.getActiveContextPosition();
-  if (abs(grid.scale(player.x - lastRedrawLocation.x)) > width / 4) {
+  let contextPosition = worldRenderer.getActiveContextPosition();
+  if (abs(grid.scale(player.x - contextPosition.x)) > width / 4) {
     return true;
   }
-  if (abs(grid.scale(player.y - lastRedrawLocation.y)) > height / 4) {
+  if (abs(grid.scale(player.y - contextPosition.y)) > height / 4) {
     return true;
   }
   return false;
