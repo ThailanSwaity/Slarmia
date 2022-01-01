@@ -171,6 +171,9 @@ function setup() {
   invY = -height / 2 + slotSize * 1.5;
 }
 
+/*
+Mediocre game loop lol
+*/
 function draw() {
   background(80);
   
@@ -214,6 +217,9 @@ function draw() {
   renderUI();
 }
 
+/*
+Draws the frame rate ever 500 milliseconds. Draws the frame rate to a graphics buffer that is later drawn to the screen.
+*/
 function renderFrameRate() {
   const m = millis();
   noStroke();
@@ -256,6 +262,10 @@ function renderHotbar() {
   }
 }
 
+/*
+Loops through the player's inventory and renders all of the items in it.
+If the inventory slot returns 0 no item is rendered.
+*/
 function renderInventory() {
   if (!invOpen) return;
   for (let i = 0; i < player.hotbarSize * 5; i++) {
@@ -271,6 +281,10 @@ function renderInventory() {
   }
 }
 
+/*
+Renders the background image and draws rectangles at the top and bottom of the image
+that seemlessly extend it.
+*/
 function renderBackground() {
   push();
   noStroke();
@@ -311,6 +325,10 @@ function addBlock(x, y, block) {
   worldRenderer.placeBlock(x, y, block);
 }
 
+/*
+Checks the distance between the player and the context Position.
+If it's greater than some threshold, true is returned.
+*/
 function needsRedraw() {
   let contextPosition = worldRenderer.getActiveContextPosition();
   if (abs(grid.scale(player.x - contextPosition.x)) > width / 4) {
@@ -322,6 +340,10 @@ function needsRedraw() {
   return false;
 }
 
+/*
+Renders the player based on its position and size.
+If at any point there is no texture passed by the Character Animator, the character will be rendered as a white rectangle.
+*/
 function renderPlayer() {
   push();
   translate(-grid.scale(player.x), -grid.scale(player.y));
@@ -349,6 +371,9 @@ function renderPlayer() {
   pop();
 }
 
+/*
+Returns the texture pulled from the array at index itemNum
+*/
 function getTextureForItem(itemNum) {
   let tex = blockList[itemNum];
   if (tex == undefined) return null;
@@ -441,6 +466,9 @@ function checkCollisions() {
   handleGravity(collided);
 }
 
+/*
+Sets the player.isGrounded value and applies gravity and friction accordingly.
+*/
 function handleGravity(collided) {
   if (!collided.y) {
     player.isGrounded = false;
@@ -454,6 +482,9 @@ function handleGravity(collided) {
   player.isGrounded = false;
 }
 
+/*
+Basic keyPress handling
+*/
 function handleKeyPress() {
   for (const key in keys) {
     if (key == 65) {
@@ -489,6 +520,10 @@ function handleKeyPress() {
   }
 }
 
+/*
+Checks to see if the mouse was clicked within the inventory window.
+If it was, all item transfer between inventory and cursor are handled here.
+*/
 function checkInventoryClick(button) {
   if (!invOpen || mouseButtons[button]) return;
   let hotbarX = Math.floor(mouseX / slotSize);
@@ -517,6 +552,11 @@ function checkInventoryClick(button) {
   mouseButtons[button] = true;
 }
 
+/*
+Checks to see if the block being placed is floating or not. If it is floating, the block will not be placed.
+Calls the direction function for any blocks that have one, passing the player's x direction as the only parameter.
+If the conditions are met, the selected block from the player's hotbar is then placed into the world at (blockX,blockY)
+*/
 function placeBlock(blockX, blockY, sel) {
   if (!grid.hasDirectNeighbor(blockX, blockY || sel == 0)) return;
   if ("setDirection" in sel) sel.setDirection(player.getXDirection());
@@ -526,6 +566,16 @@ function placeBlock(blockX, blockY, sel) {
   interactionState = 1;
 }
 
+/*
+If the left mouse button is pressed, we determine whether to place or remove blocks in the world using interactionState
+interactionState == 0 -> no current action
+interactionState == 1 -> currently placing new blocks
+interactionState == 2 -> currently removing blocks
+
+Calls placeBlock() and removeBlock() to place and remove blocks
+
+Also checks to see if the user is clicking in the inventory.
+*/
 function handleMousePress() {
   for (const button in mouseButtons) {
     if (button != 0) continue;
