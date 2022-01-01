@@ -41,7 +41,7 @@ class MultiFrameRenderer {
 	}
 
 	/*
-	Uses Javascripts' generator methods to render the world the inactive context over multiple frames.
+	Uses Javascripts' generator methods to render the world on the inactive context over multiple frames.
 	Renders this.blocks_per_frame per iteration. Returns an object { done: true } when rendering is complete.
 	*/
 	*_renderWorld() {
