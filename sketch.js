@@ -209,8 +209,8 @@ function draw() {
 
   image(
     context, 
-    (-worldGraphicsBuffer.width/2) - grid.scale(player.x - location.x), 
-    (-worldGraphicsBuffer.height/2) - grid.scale(player.y - location.y)
+    (-context.width/2) - grid.scale(player.x - location.x), 
+    (-context.height/2) - grid.scale(player.y - location.y)
   );
   
   renderPlayer();
